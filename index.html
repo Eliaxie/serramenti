@@ -92,17 +92,69 @@
                 var reader = new FileReader();
                 reader.readAsText(document.getElementById('fileSelect').files[0], "UTF-8")
                 reader.onload = function (evt) {
-                    console.log(evt.target.result);
                     console.log(CSVToArray(evt.target.result));
                 }
-                reader.readAsText(file);
             }
+            
+            let windows = [["POS", "LARGHE", "ALTEZZA", "APERTURA", "DETTAGLI", "APERT.", "VETRO", "MANIGLIA", "PEZZI", "NOTE"]];
+            
+            counter = 1
+
+            function addNewWindowForm(counter){
+                const windowHTML = `<section id="section1"> 
+                0: <input type="text" id="`+ counter +`-0"><br>
+                1: <input type="text" id="`+ counter +`-1"><br>
+                2: <input type="text" id="`+ counter +`-2"><br>
+                3: <input type="text" id="`+ counter +`-3"><br>
+                4: <input type="text" id="`+ counter +`-4"><br>
+                5: <input type="text" id="`+ counter +`-5"><br>
+                6: <input type="text" id="`+ counter +`-6"><br>
+                7: <input type="text" id="`+ counter +`-7"><br>
+                8: <input type="text" id="`+ counter +`-8"><br>
+                <input type="button" onclick="addWindow(` + counter + `)" value="Submitted">
+                </section>`
+                document.getElementById("frm").innerHTML = windowHTML
+            }
+            
+            function addWindow(id){
+                let window = new Array()
+                for (let i = 0; i < 9; i++) {
+                    window[i] = document.getElementById(id + '-' + i).value   
+                }
+                windows[id] = window
+                counter++
+                addNewWindowForm(counter)
+                console.log(windows)
+                printWindows(windows);
+            }
+
+            function printWindows(windows){
+                for (const window of windows) {
+                    console.log(window)
+                    if(window == windows[0]){
+                        document.getElementById("windowsContainer").innerHTML = window + "<br>"
+                    } else {
+                        document.getElementById("windowsContainer").innerHTML = document.getElementById("windowsContainer").innerHTML + window + `<input id="fileSelect" onchange="processFile()" class="smallbutton"/> ` + "<br>"
+                    }
+                }
+            }
+
+            window.addEventListener('DOMContentLoaded', (event) => {
+                addNewWindowForm(counter)
+            });
         </script>
     </head>
     <body>
         Importa serramenti:
-        <input id="fileSelect" type="file" accept=".csv" />  
+        <input id="fileSelect" type="file" accept=".csv" onchange="processFile()"/>  
         <hr>
-        <button onclick="processFile()">Print this page</button>
+            <div id="windowsContainer">
+
+            </div>
+            <input id="fileSelect" onchange="processFile()"/>  
+        <hr>
+        <form id="frm">
+            
+        </form>
     </body>
 </html>
