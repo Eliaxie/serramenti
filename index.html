@@ -141,7 +141,12 @@
             function addWindow(){
                 let window = new Array()
                 for (let i = 1; i <= 9; i++) {
-                    window[i] = document.getElementById('entry' + i).value   
+                    let tempWindow = document.getElementById('entry' + i).value
+                    // break the textblock into an array of lines
+                    var lines = tempWindow.split(',');
+                    // join the array back into a single string
+                    tempWindow = lines.join('.');
+                    window[i] = tempWindow   
                 }
                 windows[counter] = window
                 printWindows(windows);
