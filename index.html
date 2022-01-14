@@ -5,12 +5,19 @@
             // This will parse a delimited string into an array of
             // arrays. The default delimiter is the comma, but this
             // can be overriden in the second argument.
-            function CSVToArray( strData, strDelimiter ){
+            function CSVToArray( strData ){
                 // Check to see if the delimiter is defined. If not,
                 // then default to comma.
-                strDelimiter = (strDelimiter || ",");
-        
+                strDelimiter = (",");
+
+                // break the textblock into an array of lines
+                var lines = strData.split('\n');
+                // remove one line, starting at the first position
+                lines.splice(0,1);
+                // join the array back into a single string
+                strData = lines.join('\n');
                 // Create a regular expression to parse the CSV values.
+
                 var objPattern = new RegExp(
                     (
                         // Delimiters.
@@ -82,10 +89,15 @@
                     // it to the data array.
                     arrData[ arrData.length - 1 ].push( strMatchedValue );
                 }
-        
+                
+                if(arrData.at(-1) == ""){
+                    arrData.pop()
+                }
+
                 // Return the parsed data.
                 return( arrData );
             }
+
             const selectedFile = document.getElementById('fileSelect')
             function processFile(){
                 console.log(document.getElementById('fileSelect').files[0])
@@ -93,55 +105,95 @@
                 reader.readAsText(document.getElementById('fileSelect').files[0], "UTF-8")
                 reader.onload = function (evt) {
                     console.log(CSVToArray(evt.target.result));
+                    windows = CSVToArray(evt.target.result)
+                    printWindows(windows)
                 }
             }
             
-            let windows = [["POS", "LARGHE", "ALTEZZA", "APERTURA", "DETTAGLI", "APERT.", "VETRO", "MANIGLIA", "PEZZI", "NOTE"]];
+            let windows = [["POS", "LARGHE", "ALTEZZA", "APERTURA", "DETTAGLI", "VASISTAS", "VETRO", "MANIGLIA", "PEZZI", "NOTE"]];
             
             counter = 1
 
-            function addNewWindowForm(counter){
+            function addNewWindowForm(){
                 const windowHTML = `<section id="section1"> 
-                0: <input type="text" id="`+ counter +`-0"><br>
-                1: <input type="text" id="`+ counter +`-1"><br>
-                2: <input type="text" id="`+ counter +`-2"><br>
-                3: <input type="text" id="`+ counter +`-3"><br>
-                4: <input type="text" id="`+ counter +`-4"><br>
-                5: <input type="text" id="`+ counter +`-5"><br>
-                6: <input type="text" id="`+ counter +`-6"><br>
-                7: <input type="text" id="`+ counter +`-7"><br>
-                8: <input type="text" id="`+ counter +`-8"><br>
-                <input type="button" onclick="addWindow(` + counter + `)" value="Submitted">
+                Larghezza: <input type="text" id="entry1"><br>
+                Altezza: <input type="text" id="entry2"><br>
+                Apertura: <input type="text" id="entry3"><br>
+                Dettagli: <input type="text" id="entry4"><br>
+                Vasistas: <input type="text" id="entry5" value="Si"><br>
+                Vetro: <input type="text" id="entry6"><br>
+                Maniglia: <input type="text" id="entry7" value="Normale"><br>
+                Pezzi: <input type="text" id="entry8"><br>
+                Note: <input type="text" id="entry9"><br>
+                <input type="button" onclick="addWindow()" value="Inserisci">
                 </section>`
                 document.getElementById("frm").innerHTML = windowHTML
             }
+
+            function removeWindow(pos){
+                console.log("splicing on pos: " + (pos - 1));
+                counter--
+                windows.splice(pos - 1, 1)
+                printWindows(windows)
+            }
             
-            function addWindow(id){
+            function addWindow(){
                 let window = new Array()
-                for (let i = 0; i < 9; i++) {
-                    window[i] = document.getElementById(id + '-' + i).value   
+                for (let i = 1; i <= 9; i++) {
+                    window[i] = document.getElementById('entry' + i).value   
                 }
-                windows[id] = window
-                counter++
-                addNewWindowForm(counter)
-                console.log(windows)
+                windows[counter] = window
                 printWindows(windows);
+                counter++
+            }
+
+            function windowToTable(window){
+                let toReturn = ""
+                for (const column of window) {
+                    toReturn = toReturn + `<th>` + column + `</th>` 
+                }
+                
+                return toReturn
             }
 
             function printWindows(windows){
+                console.log(windows)
+                windowCounter = 0
+                let html = `<table>`
                 for (const window of windows) {
-                    console.log(window)
                     if(window == windows[0]){
-                        document.getElementById("windowsContainer").innerHTML = window + "<br>"
+                        html + `<tr>`
+                        html += windowToTable(window)
+                        html += `<th>` + `</th>` 
+                        html + `</tr>`
                     } else {
-                        document.getElementById("windowsContainer").innerHTML = document.getElementById("windowsContainer").innerHTML + window + `<input id="fileSelect" onchange="processFile()" class="smallbutton"/> ` + "<br>"
+                        window[0] = windowCounter
+                        html += `<tr>`
+                        html += windowToTable(window) + `<th>` +  `<button onclick="removeWindow(` + (windowCounter + 1) + `)" class="smallbutton"> Rimuovi Posizione </button> ` + `</th>` 
+                        html += `</tr>`
                     }
+                    windowCounter++
                 }
+                html += `</table>`
+                document.getElementById("windowsContainer").innerHTML = html
             }
 
             window.addEventListener('DOMContentLoaded', (event) => {
-                addNewWindowForm(counter)
+                addNewWindowForm()
             });
+
+            function downloadCSV(){
+                csvContent = "sep=,\n"
+                for (const window of windows) {
+                    csvContent += window + "\n";
+                }
+                var element = document.createElement('a');
+                  element.setAttribute('href','data:text/plain;charset=utf-8, ' + encodeURIComponent(csvContent));
+                  element.setAttribute('download', "serramenti.csv");
+                  document.body.appendChild(element);
+                  element.click();
+            }
+
         </script>
     </head>
     <body>
@@ -151,7 +203,8 @@
             <div id="windowsContainer">
 
             </div>
-            <input id="fileSelect" onchange="processFile()"/>  
+            <br>
+            <button id="fileSelect" onclick="downloadCSV()">Scarica modulo</button>  
         <hr>
         <form id="frm">
             
